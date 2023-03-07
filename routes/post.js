@@ -1,35 +1,17 @@
 const express = require("express");
 
-const HttpError = require("../models/http-error");
+const postController = require("../controllers/post");
 
 const router = express.Router();
 
-const DUMMY_POSTS = [
-  { id: "p1", title: "MU", content: "ABCXYZ", creator: "u1" },
-  { id: "p2", title: "MC", content: "ABCXYZ", creator: "u2" },
-];
+router.get("/:pid", postController.getPostById);
 
-router.get("/:pid", (req, res, next) => {
-  const postId = req.params.pid;
-  const post = DUMMY_POSTS.find((p) => {
-    return p.id === postId;
-  });
+router.get("/user/:uid", postController.getPostByUserId);
 
-  if (!post) {
-    throw new HttpError("Could not find a post for the provided id", 404);
-  }
-  res.json({ post });
-});
+router.post("/", postController.createPost);
 
-router.get("/user/:uid", (req, res, next) => {
-  const userId = req.params.uid;
-  const post = DUMMY_POSTS.find((p) => {
-    return p.creator === userId;
-  });
-  if (!post) {
-    return next(new HttpError("Could not find posts for the provided userId", 404));
-  }
-  res.json({ post });
-});
+router.patch("/:pid", postController.updatePostById);
+
+router.delete("/:pid", postController.deletePostById);
 
 module.exports = router;
