@@ -4,6 +4,8 @@ const { validationResult } = require("express-validator");
 
 const HttpError = require("../models/http-error");
 
+const Post = require("../models/post");
+
 let DUMMY_POSTS = [
   { id: "p1", title: "MU", content: "ABCXYZ", creator: "u1" },
   { id: "p2", title: "MC", content: "ABCXYZ", creator: "u2" },
@@ -34,21 +36,25 @@ exports.getPostsByUserId = (req, res, next) => {
   res.json({ posts });
 };
 
-exports.createPost = (req, res, next) => {
+exports.createPost = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     throw new HttpError("Invalid input passed, please check your data", 422);
   }
 
   const { title, content, creator } = req.body;
-  const createdPost = {
-    id: uuidv4(),
+  const createdPost = new Post({
     title,
     content,
+    image:
+      "https://media-cldnry.s-nbcnews.com/image/upload/rockcms/2022-05/220517-evan-spiegel-jm-1058-bf9cae.jpg",
     creator,
-  };
-
-  DUMMY_POSTS.push(createdPost);
+  });
+  try {
+    await createdPost.save();
+  } catch (err) {
+    return next(new HttpError("Creating post failed, please try again.", 500));
+  }
 
   res.status(201).json({ post: createdPost });
 };
