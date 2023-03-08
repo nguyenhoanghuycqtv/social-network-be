@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const postRoutes = require("./routes/post");
 const userRoutes = require("./routes/user");
@@ -23,4 +24,12 @@ app.use((err, req, res, next) => {
   res.json({ message: err.message || "An error unknow occurred" });
 });
 
-app.listen(5000);
+mongoose
+  .connect(
+    "mongodb+srv://admin:admin@cluster0.4vkklpk.mongodb.net/posts?retryWrites=true&w=majority"
+  )
+  .then((result) => {
+    console.log("Connected");
+    app.listen(5000);
+  })
+  .catch((err) => console.log(err));
