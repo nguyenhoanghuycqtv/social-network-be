@@ -1,5 +1,7 @@
 const { v4: uuidv4 } = require("uuid");
 
+const { validationResult } = require("express-validator");
+
 const HttpError = require("../models/http-error");
 
 let DUMMY_POSTS = [
@@ -19,20 +21,25 @@ exports.getPostById = (req, res, next) => {
   res.json({ post });
 };
 
-exports.getPostByUserId = (req, res, next) => {
+exports.getPostsByUserId = (req, res, next) => {
   const userId = req.params.uid;
-  const post = DUMMY_POSTS.find((p) => {
+  const posts = DUMMY_POSTS.filter((p) => {
     return p.creator === userId;
   });
-  if (!post) {
+  if (!posts || posts.length === 0) {
     return next(
       new HttpError("Could not find posts for the provided userId", 404)
     );
   }
-  res.json({ post });
+  res.json({ posts });
 };
 
 exports.createPost = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new HttpError("Invalid input passed, please check your data", 422);
+  }
+
   const { title, content, creator } = req.body;
   const createdPost = {
     id: uuidv4(),
@@ -47,6 +54,11 @@ exports.createPost = (req, res, next) => {
 };
 
 exports.updatePostById = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new HttpError("Invalid input passed, please check your data", 422);
+  }
+
   const { title, content } = req.body;
   const postId = req.params.pid;
   const updatedPost = { ...DUMMY_POSTS.find((p) => p.id === postId) };
@@ -62,6 +74,10 @@ exports.updatePostById = (req, res, next) => {
 
 exports.deletePostById = (req, res, next) => {
   const postId = req.params.pid;
+  if (!DUMMY_POSTS.find((p) => p.id === postId)) {
+    throw new HttpError("Could not find the id provided", 404);
+  }
+
   DUMMY_POSTS = DUMMY_POSTS.filter((p) => p.id !== postId);
   res.status(200).json("Deleted");
 };
