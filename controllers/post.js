@@ -1,9 +1,9 @@
 const { validationResult } = require("express-validator");
-
+const mongoose = require("mongoose");
 const HttpError = require("../models/http-error");
 
 const Post = require("../models/post");
-const post = require("../models/post");
+const User = require("../models/user");
 
 exports.getPostById = async (req, res, next) => {
   const postId = req.params.pid;
@@ -54,8 +54,28 @@ exports.createPost = async (req, res, next) => {
       "https://media-cldnry.s-nbcnews.com/image/upload/rockcms/2022-05/220517-evan-spiegel-jm-1058-bf9cae.jpg",
     creator,
   });
+
+  let user;
+
   try {
-    await createdPost.save();
+    user = await User.findById(creator);
+  } catch (err) {
+    return next(new HttpError("Creating post failed, please try again", 500));
+  }
+
+  if (!user) {
+    return next(new HttpError("Could not find user", 404));
+  }
+
+  console.log(user);
+
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await createdPost.save({ session: sess });
+    user.posts.push(createdPost);
+    await user.save({ session: sess });
+    await sess.commitTransaction();
   } catch (err) {
     return next(new HttpError("Creating post failed, please try again.", 500));
   }
@@ -96,8 +116,23 @@ exports.updatePostById = async (req, res, next) => {
 
 exports.deletePostById = async (req, res, next) => {
   const postId = req.params.pid;
+  let post;
   try {
-    await Post.findByIdAndRemove(postId);
+    post = await Post.findById(postId).populate("creator");
+    console.log(post);
+  } catch (err) {
+    return next(new HttpError("Could not delete post", 500));
+  }
+  if (!post) {
+    return next(new HttpError("Could not find post for this id", 404));
+  }
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await Post.findByIdAndRemove(post._id, { session: sess });
+    post.creator.posts.pull(post);
+    await post.creator.save({ session: sess });
+    await sess.commitTransaction();
   } catch (err) {
     return next(new HttpError("Could not delete post", 500));
   }
