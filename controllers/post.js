@@ -84,34 +84,19 @@ exports.createPost = async (req, res, next) => {
 };
 
 exports.updatePostById = async (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    throw new HttpError("Invalid input passed, please check your data", 422);
-  }
-
-  const { title, content } = req.body;
-  const postId = req.params.pid;
-  let post;
   try {
-    post = await Post.findById(postId);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new HttpError("Invalid input passed, please check your data", 422);
+    }
+
+    const { title, content } = req.body;
+    const postId = req.params.pid;
+    const postRes = await Post.findByIdAndUpdate(postId, { title, content });
+    res.status(200).json({ post: postRes });
   } catch (err) {
-    return next(
-      new HttpError("Something went wrong, could not update post", 500)
-    );
+    next(err);
   }
-
-  post.title = title;
-  post.content = content;
-
-  try {
-    post.save();
-  } catch (err) {
-    return next(
-      new HttpError("Something went wrong, could not update post", 500)
-    );
-  }
-
-  res.status(200).json({ post: post.toObject({ getters: true }) });
 };
 
 exports.deletePostById = async (req, res, next) => {
