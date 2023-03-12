@@ -56,7 +56,7 @@ exports.login = async (req, res, next) => {
     return next(new HttpError("Logging In failed, please try again", 500));
   }
   if (!existingUser || existingUser.password !== password) {
-    return next(new HttpError("Logging In failed, please try again", 401));
+    return next(new HttpError("Unauthorized", 401));
   }
   res.json({
     message: "Logged in",

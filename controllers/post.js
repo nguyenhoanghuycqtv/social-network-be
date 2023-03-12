@@ -54,8 +54,7 @@ exports.createPost = async (req, res, next) => {
   const createdPost = new Post({
     title,
     content,
-    image:
-      "https://media-cldnry.s-nbcnews.com/image/upload/rockcms/2022-05/220517-evan-spiegel-jm-1058-bf9cae.jpg",
+    image: req.file.path,
     creator,
   });
 
