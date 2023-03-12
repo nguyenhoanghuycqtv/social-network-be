@@ -34,8 +34,7 @@ exports.signup = async (req, res, next) => {
     name,
     email,
     password,
-    image:
-      "https://scontent.fsgn3-1.fna.fbcdn.net/v/t39.30808-6/335087045_1840716722996808_8755302137692866446_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=0debeb&_nc_ohc=A31BBxPc0CEAX8T-teV&_nc_ht=scontent.fsgn3-1.fna&oh=00_AfBIqkp_kf4z8kWZWbbSaemBzTmqKu5kdiJmfYqHVCI7mw&oe=640D0284",
+    image: req.file.path,
     posts: [],
   });
 
@@ -59,5 +58,8 @@ exports.login = async (req, res, next) => {
   if (!existingUser || existingUser.password !== password) {
     return next(new HttpError("Logging In failed, please try again", 401));
   }
-  res.json({ message: "Logged in" });
+  res.json({
+    message: "Logged in",
+    user: existingUser.toObject({ getters: true }),
+  });
 };

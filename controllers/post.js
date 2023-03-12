@@ -24,18 +24,22 @@ exports.getPostById = async (req, res, next) => {
 
 exports.getPostsByUserId = async (req, res, next) => {
   const userId = req.params.uid;
-  let posts;
+  let userWithPosts;
   try {
-    posts = await Post.find({ creator: userId });
+    userWithPosts = await User.findById(userId).populate("posts");
+
+    console.log(userWithPosts);
   } catch (err) {
-    return next(new HttpError("Could not find posts of user", 500));
+    return next(new HttpError("Fetching failed, please try again", 500));
   }
-  if (!posts || posts.length === 0) {
+  if (!userWithPosts.posts || userWithPosts.posts.length === 0) {
     return next(
       new HttpError("Could not find posts for the provided userId", 404)
     );
   }
-  res.json({ posts: posts.map((post) => post.toObject({ getters: true })) });
+  res.json({
+    posts: userWithPosts.posts.map((post) => post.toObject({ getters: true })),
+  });
 };
 
 exports.createPost = async (req, res, next) => {
