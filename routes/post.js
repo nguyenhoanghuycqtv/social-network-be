@@ -6,11 +6,15 @@ const postController = require("../controllers/post");
 
 const fileUpload = require("../middlewares/file-upload");
 
+const checkAuth = require("../middlewares/check-auth");
+
 const router = express.Router();
 
 router.get("/:pid", postController.getPostById);
 
 router.get("/user/:uid", postController.getPostsByUserId);
+
+router.use(checkAuth)
 
 router.post(
   "/",

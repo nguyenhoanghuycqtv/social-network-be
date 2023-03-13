@@ -1,6 +1,8 @@
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const User = require("../models/user");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 exports.getUsers = async (req, res, next) => {
   let users;
@@ -30,10 +32,13 @@ exports.signup = async (req, res, next) => {
     return next(new HttpError("User has existed", 422));
   }
 
+  let hashedPassword;
+  hashedPassword = await bcrypt.hash(password, 12);
+
   const userCreated = new User({
     name,
     email,
-    password,
+    password: hashedPassword,
     image: req.file.path,
     posts: [],
   });
@@ -44,7 +49,20 @@ exports.signup = async (req, res, next) => {
     return next(new HttpError("Creating user failed, please try again.", 500));
   }
 
-  res.status(201).json({ user: userCreated.toObject({ getters: true }) });
+  let token;
+  try {
+    token = jwt.sign(
+      { userId: userCreated.id, email: userCreated.email },
+      "supersecret_dont_share",
+      { expiresIn: "1h" }
+    );
+  } catch (err) {
+    return next(new HttpError("Creating user failed, please try again.", 500));
+  }
+
+  res
+    .status(201)
+    .json({ userId: userCreated._id, email: userCreated.email, token: token });
 };
 
 exports.login = async (req, res, next) => {
@@ -55,11 +73,35 @@ exports.login = async (req, res, next) => {
   } catch (err) {
     return next(new HttpError("Logging In failed, please try again", 500));
   }
-  if (!existingUser || existingUser.password !== password) {
+  if (!existingUser) {
     return next(new HttpError("Unauthorized", 401));
   }
+
+  let isValidPassword;
+
+  try {
+    isValidPassword = await bcrypt.compare(password, existingUser.password);
+  } catch (err) {
+    return next(new HttpError("Logging In failed, please try again", 500));
+  }
+  if (!isValidPassword) {
+    return next(new HttpError("Unauthorized", 401));
+  }
+
+  let token;
+  try {
+    token = jwt.sign(
+      { userId: existingUser._id, email: existingUser.email },
+      "supersecret_dont_share",
+      { expiresIn: "1h" }
+    );
+  } catch (err) {
+    return next(new HttpError("Logging in failed, please try again.", 500));
+  }
+
   res.json({
-    message: "Logged in",
-    user: existingUser.toObject({ getters: true }),
+    userId: existingUser._id,
+    email: existingUser.email,
+    token: token,
   });
 };
