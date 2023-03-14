@@ -27,8 +27,6 @@ exports.getPostsByUserId = async (req, res, next) => {
   let userWithPosts;
   try {
     userWithPosts = await User.findById(userId).populate("posts");
-
-    console.log(userWithPosts);
   } catch (err) {
     return next(new HttpError("Fetching failed, please try again", 500));
   }
@@ -92,11 +90,25 @@ exports.updatePostById = async (req, res, next) => {
     if (!errors.isEmpty()) {
       throw new HttpError("Invalid input passed, please check your data", 422);
     }
-
     const { title, content } = req.body;
     const postId = req.params.pid;
-    const postRes = await Post.findByIdAndUpdate(postId, { title, content });
-    res.status(200).json({ post: postRes });
+
+    const post = await Post.findById(postId).populate("creator");
+
+    if (!post) {
+      return next(new HttpError("Could not find post for this id", 404));
+    }
+
+    if (post.creator.id !== req.userData.userId) {
+      console.log(post.creator._id);
+      console.log(req.userData.userId)
+      return next(
+        new HttpError("You are not allowed to delete this post", 401)
+      );
+    }
+
+    const postUpdated = await post.updateOne({ title, content });
+    res.status(200).json({ post: postUpdated });
   } catch (err) {
     next(err);
   }
@@ -107,13 +119,17 @@ exports.deletePostById = async (req, res, next) => {
   let post;
   try {
     post = await Post.findById(postId).populate("creator");
-    console.log(post);
   } catch (err) {
     return next(new HttpError("Could not delete post", 500));
   }
   if (!post) {
     return next(new HttpError("Could not find post for this id", 404));
   }
+
+  if (post.creator.id !== req.userData.userId) {
+    return next(new HttpError("You are not allowed to delete this post", 401));
+  }
+
   try {
     const sess = await mongoose.startSession();
     sess.startTransaction();
