@@ -7,13 +7,26 @@ const jwt = require("jsonwebtoken");
 exports.getUsers = async (req, res, next) => {
   let users;
   try {
-    users = await User.find({}, "-password");
+    users = await User.find({}, "-password").populate('posts');
   } catch (err) {
     return next("Could not fetch users data", 500);
   }
   res
     .status(200)
     .json({ users: users.map((user) => user.toObject({ getters: true })) });
+};
+
+exports.getUser = async (req, res, next) => {
+  let userId = req.params.id;
+  console.log(userId)
+  let user;
+  try {
+    user = await User.findById(userId).populate('posts');
+  } catch (err) {
+    return next("Could not fetch users data", 500);
+  }
+
+  res.status(200).json({ user: user.toObject({ getters: true }) });
 };
 
 exports.signup = async (req, res, next) => {

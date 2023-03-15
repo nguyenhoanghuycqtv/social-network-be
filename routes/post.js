@@ -10,11 +10,13 @@ const checkAuth = require("../middlewares/check-auth");
 
 const router = express.Router();
 
+router.get("/", postController.getAllPost);
+
 router.get("/:pid", postController.getPostById);
 
 router.get("/user/:uid", postController.getPostsByUserId);
 
-router.use(checkAuth)
+router.use(checkAuth);
 
 router.post(
   "/",

@@ -5,6 +5,14 @@ const HttpError = require("../models/http-error");
 const Post = require("../models/post");
 const User = require("../models/user");
 
+exports.getAllPost = async (req, res, next) => {
+  let posts;
+  posts = await Post.find().populate("creator");
+  res
+    .status(200)
+    .json({ posts: posts.map((post) => post.toObject({ getters: true })) });
+};
+
 exports.getPostById = async (req, res, next) => {
   const postId = req.params.pid;
   let post;
@@ -37,6 +45,7 @@ exports.getPostsByUserId = async (req, res, next) => {
   }
   res.json({
     posts: userWithPosts.posts.map((post) => post.toObject({ getters: true })),
+    user: userWithPosts.toObject({ getters: true }),
   });
 };
 
@@ -101,7 +110,7 @@ exports.updatePostById = async (req, res, next) => {
 
     if (post.creator.id !== req.userData.userId) {
       console.log(post.creator._id);
-      console.log(req.userData.userId)
+      console.log(req.userData.userId);
       return next(
         new HttpError("You are not allowed to delete this post", 401)
       );
