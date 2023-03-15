@@ -7,7 +7,7 @@ const User = require("../models/user");
 
 exports.getAllPost = async (req, res, next) => {
   let posts;
-  posts = await Post.find().populate("creator");
+  posts = await Post.find().populate("creator comments");
   res
     .status(200)
     .json({ posts: posts.map((post) => post.toObject({ getters: true })) });
@@ -63,6 +63,7 @@ exports.createPost = async (req, res, next) => {
     content,
     image: req.file.path,
     creator,
+    comments: [],
   });
 
   let user;
@@ -76,8 +77,6 @@ exports.createPost = async (req, res, next) => {
   if (!user) {
     return next(new HttpError("Could not find user", 404));
   }
-
-  console.log(user);
 
   try {
     const sess = await mongoose.startSession();
