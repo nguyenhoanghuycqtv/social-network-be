@@ -4,8 +4,10 @@ const commentController = require("../controllers/comment");
 
 const router = express.Router();
 
-router.get("/", commentController.getCommentsByPost);
+router.get("/", commentController.getAllComment);
 
-router.post("/", commentController.createComment);
+router.get("/:id", commentController.getCommentsByPostId);
+
+router.post("/:id", commentController.createComment);
 
 module.exports = router;

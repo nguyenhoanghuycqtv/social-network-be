@@ -3,11 +3,11 @@ const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+
 const userRoutes = require("./routes/user");
 const postRoutes = require("./routes/post");
 const commentRoutes = require("./routes/comment");
 const { handleNotFound, handleError } = require("./middlewares/error-handler");
-
 const app = express();
 
 // connect mongo
@@ -28,4 +28,8 @@ app.use("/api/comments", commentRoutes);
 app.use(handleNotFound);
 app.use(handleError);
 
-app.listen(process.env.PORT);
+const server = app.listen(process.env.PORT);
+const io = require("./socket").init(server);
+io.on("connection", (socket) => {
+  console.log("A client connected");
+});

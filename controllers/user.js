@@ -4,10 +4,10 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-exports.getUsers = async (req, res, next) => {
+exports.getAllUser = async (req, res, next) => {
   let users;
   try {
-    users = await User.find({}, "-password").populate('posts');
+    users = await User.find({}, "-password").populate("posts");
   } catch (err) {
     return next("Could not fetch users data", 500);
   }
@@ -18,10 +18,9 @@ exports.getUsers = async (req, res, next) => {
 
 exports.getUser = async (req, res, next) => {
   let userId = req.params.id;
-  console.log(userId)
   let user;
   try {
-    user = await User.findById(userId).populate('posts');
+    user = await User.findById(userId).populate("posts comments");
   } catch (err) {
     return next("Could not fetch users data", 500);
   }
@@ -75,7 +74,13 @@ exports.signup = async (req, res, next) => {
 
   res
     .status(201)
-    .json({ userId: userCreated._id, email: userCreated.email, token: token });
+    .json({
+      userId: userCreated._id,
+      email: userCreated.email,
+      token: token,
+      name: userCreated.name,
+      image: userCreated.image,
+    });
 };
 
 exports.login = async (req, res, next) => {
@@ -94,6 +99,7 @@ exports.login = async (req, res, next) => {
 
   try {
     isValidPassword = await bcrypt.compare(password, existingUser.password);
+    // isValidPassword = password === existingUser.password;
   } catch (err) {
     return next(new HttpError("Logging In failed, please try again", 500));
   }
@@ -116,5 +122,7 @@ exports.login = async (req, res, next) => {
     userId: existingUser._id,
     email: existingUser.email,
     token: token,
+    name: existingUser.name,
+    image: existingUser.image
   });
 };

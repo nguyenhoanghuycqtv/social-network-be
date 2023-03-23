@@ -1,12 +1,14 @@
 // const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 const HttpError = require("../models/http-error");
-
+const io = require("../socket");
 const Post = require("../models/post");
 const User = require("../models/user");
 const Comment = require("../models/comment");
 
 exports.createComment = async (req, res, next) => {
+  const postId = req.params.id;
+
   const { content, creator, location } = req.body;
 
   const createdComment = new Comment({
@@ -21,7 +23,6 @@ exports.createComment = async (req, res, next) => {
   try {
     user = await User.findById(creator);
     post = await Post.findById(location);
-    console.log(location);
   } catch {
     return next(
       new HttpError("Creating comment failed, please try again", 500)
@@ -41,18 +42,37 @@ exports.createComment = async (req, res, next) => {
     return next(new HttpError("Creating post failed, please try again.", 500));
   }
 
-  //   if (!user && !post) {
-  //     return next(new HttpError("Could not find comment", 404));
-  //   }
+  let comments = await Comment.find({ location: postId })
+    .populate("creator location")
+    .then((result) => result.pop());
 
-  res.status(200).json({ comment: createdComment });
+  res.status(200).json({ comment: comments });
 };
 
-exports.getCommentsByPost = async (req, res, next) => {
+exports.getAllComment = async (req, res, next) => {
   let comments;
   comments = await Comment.find().populate("location creator");
 
   res.status(200).json({
     comments: comments.map((comment) => comment.toObject({ getters: true })),
   });
+};
+
+exports.getCommentsByPostId = async (req, res, next) => {
+  let comments;
+  let postId = req.params.id;
+  comments = await Comment.find({ location: postId }).populate(
+    "location creator"
+  );
+  // commentsByPostId = comments.filter(
+  //   (comment) => comment.location._id === postId
+  // );
+  // console.log(commentsByPostId);
+  // res.status(200).json({
+  //   comments: commentsByPostId.map((comment) =>
+  //     comment.toObject({ getters: true })
+  //   ),
+  // });
+
+  res.status(200).json({ comments });
 };

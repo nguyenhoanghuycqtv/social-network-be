@@ -8,7 +8,7 @@ const fileUpload = require("../middlewares/file-upload");
 
 const router = express.Router();
 
-router.get("/", userController.getUsers);
+router.get("/", userController.getAllUser);
 
 router.get("/:id", userController.getUser);
 
