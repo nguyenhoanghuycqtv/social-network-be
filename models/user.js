@@ -8,7 +8,6 @@ const userSchema = new Schema({
   password: { type: String, required: true, minlength: 6 },
   image: { type: String, required: true },
   posts: [{ type: mongoose.Types.ObjectId, required: true, ref: "Post" }],
-  comments: [{ type: mongoose.Types.ObjectId, required: true, ref: "Comment" }],
 });
 
 module.exports = mongoose.model("User", userSchema);

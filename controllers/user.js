@@ -20,7 +20,7 @@ exports.getUser = async (req, res, next) => {
   let userId = req.params.id;
   let user;
   try {
-    user = await User.findById(userId).populate("posts comments");
+    user = await User.findById(userId).populate("posts");
   } catch (err) {
     return next("Could not fetch users data", 500);
   }

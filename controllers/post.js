@@ -36,7 +36,7 @@ exports.getPostsByUserId = async (req, res, next) => {
   const userId = req.params.uid;
   let userWithPosts;
   try {
-    userWithPosts = await User.findById(userId).populate("posts comments");
+    userWithPosts = await User.findById(userId).populate("posts");
   } catch (err) {
     return next(new HttpError("Fetching failed, please try again", 500));
   }
@@ -124,41 +124,24 @@ exports.updatePostById = async (req, res, next) => {
 exports.deletePostById = async (req, res, next) => {
   const postId = req.params.pid;
   let post;
-  let comments;
-  let users;
   try {
     post = await Post.findById(postId).populate("creator comments");
-    // comments = await Comment.find().populate("location creator");
-    // users = await find().populate("location comments");
-    // let commentsOfPost = comments.filter(
-    //   (comment) => comment.location.id === postId
-    // );
-    // console.log("Comment Of Post",commentsOfPost)
-    // let commentsAfterDeletePost = comments.filter(
-    //   (comment) => comment.location._id !== postId
-    // );
-    // console.log(commentsAfterDeletePost);
   } catch (err) {
     return next(new HttpError("Could not delete post", 500));
   }
   if (!post) {
     return next(new HttpError("Could not find post for this id", 404));
   }
-
-  // if (post.creator.id !== req.userData.userId) {
-  //   return next(new HttpError("You are not allowed to delete this post", 401));
-  // }
-
   try {
     const sess = await mongoose.startSession();
     sess.startTransaction();
-    // await commentsAfterDeletePost.save();
-
-    await Post.findByIdAndRemove(post._id, { session: sess });
+    await Comment.deleteMany({ location: postId }, { session: sess });
+    await Post.findByIdAndRemove(postId, { session: sess });
     post.creator.posts.pull(post);
     await post.creator.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
+    console.log("Transaction", "123");
     return next(new HttpError("Could not delete post", 500));
   }
 

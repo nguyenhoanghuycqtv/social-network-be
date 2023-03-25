@@ -21,7 +21,6 @@ exports.createComment = async (req, res, next) => {
   let post;
 
   try {
-    user = await User.findById(creator);
     post = await Post.findById(location);
   } catch {
     return next(
@@ -33,9 +32,7 @@ exports.createComment = async (req, res, next) => {
     const sess = await mongoose.startSession();
     sess.startTransaction();
     await createdComment.save({ session: sess });
-    user.comments.push(createdComment);
     post.comments.push(createdComment);
-    await user.save({ session: sess });
     await post.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
@@ -64,15 +61,6 @@ exports.getCommentsByPostId = async (req, res, next) => {
   comments = await Comment.find({ location: postId }).populate(
     "location creator"
   );
-  // commentsByPostId = comments.filter(
-  //   (comment) => comment.location._id === postId
-  // );
-  // console.log(commentsByPostId);
-  // res.status(200).json({
-  //   comments: commentsByPostId.map((comment) =>
-  //     comment.toObject({ getters: true })
-  //   ),
-  // });
 
   res.status(200).json({ comments });
 };
