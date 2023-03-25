@@ -12,6 +12,10 @@ router.get("/", userController.getAllUser);
 
 router.get("/:id", userController.getUser);
 
+router.get("/:id/friends", userController.getFriends);
+
+router.post("/:id/add-friend", userController.addFriend);
+
 router.post(
   "/signup",
   fileUpload.single("image"),

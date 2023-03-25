@@ -3,6 +3,7 @@ const HttpError = require("../models/http-error");
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 exports.getAllUser = async (req, res, next) => {
   let users;
@@ -26,6 +27,48 @@ exports.getUser = async (req, res, next) => {
   }
 
   res.status(200).json({ user: user.toObject({ getters: true }) });
+};
+
+exports.getFriends = async (req, res, next) => {
+  let userId = req.params.id;
+  let user;
+  try {
+    user = await User.findById(userId).populate("friends");
+  } catch (err) {
+    return next("Could not fetch friends of UserID provided");
+  }
+
+  res.status(200).json({
+    friends: user.friends.map((friend) => friend.toObject({ getters: true })),
+  });
+};
+
+exports.addFriend = async (req, res, next) => {
+  let userId = req.params.id;
+  const { friendId } = req.body;
+  console.log(friendId);
+
+  if (!userId || !friendId) {
+    return res.status(400).json({ message: "Invalid user ID or friend ID" });
+  }
+
+  const user = await User.findById(userId);
+  const friend = await User.findById(friendId).populate("posts friends");
+  if (user.friends.includes(friendId)) {
+    return res.status(400).json({ message: "Friend already added" });
+  }
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    user.friends.push(friendId);
+    await user.save({ session: sess });
+    friend.friends.push(userId);
+    await friend.save({ session: sess });
+    sess.commitTransaction();
+  } catch (err) {
+    return next(HttpError("Add friend failed", 500));
+  }
+  res.status(200).json({ friendAdded: friend });
 };
 
 exports.signup = async (req, res, next) => {
@@ -53,6 +96,7 @@ exports.signup = async (req, res, next) => {
     password: hashedPassword,
     image: req.file.path,
     posts: [],
+    friends: [],
   });
 
   try {
@@ -72,15 +116,13 @@ exports.signup = async (req, res, next) => {
     return next(new HttpError("Creating user failed, please try again.", 500));
   }
 
-  res
-    .status(201)
-    .json({
-      userId: userCreated._id,
-      email: userCreated.email,
-      token: token,
-      name: userCreated.name,
-      image: userCreated.image,
-    });
+  res.status(201).json({
+    userId: userCreated._id,
+    email: userCreated.email,
+    token: token,
+    name: userCreated.name,
+    image: userCreated.image,
+  });
 };
 
 exports.login = async (req, res, next) => {
@@ -123,6 +165,6 @@ exports.login = async (req, res, next) => {
     email: existingUser.email,
     token: token,
     name: existingUser.name,
-    image: existingUser.image
+    image: existingUser.image,
   });
 };
