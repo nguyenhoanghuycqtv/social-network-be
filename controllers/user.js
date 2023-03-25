@@ -46,7 +46,6 @@ exports.getFriends = async (req, res, next) => {
 exports.addFriend = async (req, res, next) => {
   let userId = req.params.id;
   const { friendId } = req.body;
-  console.log(friendId);
 
   if (!userId || !friendId) {
     return res.status(400).json({ message: "Invalid user ID or friend ID" });
