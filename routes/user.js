@@ -16,6 +16,8 @@ router.get("/:id/friends", userController.getFriends);
 
 router.post("/:id/add-friend", userController.addFriend);
 
+router.delete("/:id/delete-friend", userController.deleteFriend);
+
 router.post(
   "/signup",
   fileUpload.single("image"),

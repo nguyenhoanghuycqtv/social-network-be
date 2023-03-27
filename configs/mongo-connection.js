@@ -7,4 +7,4 @@ const mongoConnection = mongoose
   })
   .catch((err) => console.log(err));
 
-module.exports = mongoConnection
+module.exports = mongoConnection;

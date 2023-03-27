@@ -141,7 +141,6 @@ exports.deletePostById = async (req, res, next) => {
     await post.creator.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
-    console.log("Transaction", "123");
     return next(new HttpError("Could not delete post", 500));
   }
 

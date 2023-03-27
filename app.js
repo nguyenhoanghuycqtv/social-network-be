@@ -7,6 +7,7 @@ const cors = require("cors");
 const userRoutes = require("./routes/user");
 const postRoutes = require("./routes/post");
 const commentRoutes = require("./routes/comment");
+const searchRoutes = require("./routes/search");
 const { handleNotFound, handleError } = require("./middlewares/error-handler");
 const app = express();
 
@@ -23,6 +24,8 @@ app.use("/api/posts", postRoutes);
 app.use("/api/users", userRoutes);
 
 app.use("/api/comments", commentRoutes);
+
+app.use("/api/search", searchRoutes);
 
 // handle error
 app.use(handleNotFound);

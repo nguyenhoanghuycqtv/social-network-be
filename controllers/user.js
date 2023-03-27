@@ -29,6 +29,7 @@ exports.getUser = async (req, res, next) => {
   res.status(200).json({ user: user.toObject({ getters: true }) });
 };
 
+
 exports.getFriends = async (req, res, next) => {
   let userId = req.params.id;
   let user;
@@ -65,9 +66,31 @@ exports.addFriend = async (req, res, next) => {
     await friend.save({ session: sess });
     sess.commitTransaction();
   } catch (err) {
-    return next(HttpError("Add friend failed", 500));
+    return next(new HttpError("Add friend failed", 500));
   }
   res.status(200).json({ friendAdded: friend });
+};
+
+exports.deleteFriend = async (req, res, next) => {
+  const userId = req.params.id;
+  const { friendId } = req.body;
+  if (!userId || !friendId) {
+    return res.status(400).json({ message: "Invalid user ID or friend ID" });
+  }
+  const user = await User.findById(userId);
+  const friend = await User.findById(friendId);
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    user.friends.pull(friendId);
+    await user.save({ session: sess });
+    friend.friends.pull(userId);
+    await friend.save({ session: sess });
+    sess.commitTransaction();
+  } catch (err) {
+    return next(new HttpError("Delete friend failed", 500));
+  }
+  res.status(200).json("Deleted");
 };
 
 exports.signup = async (req, res, next) => {
