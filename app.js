@@ -31,8 +31,10 @@ app.use("/api/search", searchRoutes);
 app.use(handleNotFound);
 app.use(handleError);
 
-const server = app.listen(process.env.PORT);
-const io = require("./socket").init(server);
-io.on("connection", (socket) => {
-  console.log("A client connected");
-});
+app.listen(process.env.PORT)
+
+// const server = app.listen(process.env.PORT);
+// const io = require("./socket").init(server);
+// io.on("connection", (socket) => {
+//   console.log("A client connected");
+// });
